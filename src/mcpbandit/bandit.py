@@ -29,7 +29,7 @@ class ArmState:
                 adapt faster at the cost of being noisier at the beginning.
 
         Returns:
-            A new `LinearBanditArmState` with initialized design matrix factor and response vector.
+            A new `ArmState` with initialized design matrix factor and response vector.
         """
         L = np.sqrt(lam) * np.identity(context_length, dtype=np.float64)
         b = np.zeros((context_length, 1), dtype=np.float64)
