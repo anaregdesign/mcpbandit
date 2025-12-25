@@ -1,6 +1,6 @@
 ## mcpbandit
 
-An experimental library for routing LLM agents with contextual bandits. `QuestionBasedContextExtractor` builds feature vectors from user input, and policies such as `ThompsonSamplingRegistory` (or `UCBRegistory`) learn which agent to run by balancing exploration and exploitation with every turn.
+An experimental library for routing LLM agents with contextual bandits. `QuestionBasedContextExtractor` builds feature vectors from user input, and policies such as `ThompsonSamplingRegistry` (or `UCBRegistry`) learn which agent to run by balancing exploration and exploitation with every turn.
 
 ## Install (uv)
 
@@ -28,7 +28,7 @@ uv run python examples/agents/cli_chat_loop.py
 Key pieces (excerpted from the example):
 
 ```python
-registry = ThompsonSamplingRegistory(
+registry = ThompsonSamplingRegistry(
     context_length=context_extractor.context_length
 )
 registry.add(polite_agent)
@@ -66,7 +66,7 @@ while True:
 
 What happens:
 - `QuestionBasedContextExtractor` asks the LLM three yes/no-ish questions and turns the numeric answers into a feature vector.
-- Bandit step (core point): `ThompsonSamplingRegistory` registers each agent as an arm, `observe` feeds back the reward from the previous turn, and `select` samples parameters to choose which agent to run for the current context.
+- Bandit step (core point): `ThompsonSamplingRegistry` registers each agent as an arm, `observe` feeds back the reward from the previous turn, and `select` samples parameters to choose which agent to run for the current context.
 - The chosen agent is executed with `Runner.run`, and the resulting feedback becomes the reward signal for the next `observe`/`select` cycle.
 
 You can swap in different agents, context extractors, or bandit policies to adapt the routing to your use case.
