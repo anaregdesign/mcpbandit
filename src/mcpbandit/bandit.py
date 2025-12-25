@@ -66,19 +66,27 @@ class Arm(Generic[T]):
 class BanditRegistry(ABC, Generic[T]):
     context_length: int
     arms: list[Arm[T]] = field(default_factory=list)
+    _lock: RLock = field(default_factory=RLock, init=False, repr=False, compare=False)
+
+    def _arms_snapshot(self) -> list[Arm[T]]:
+        """Capture a thread-safe shallow copy of the arms list."""
+        with self._lock:
+            return list(self.arms)
 
     def add(self, body: T) -> None:
         """Add a new arm to the policy with initialized statistics."""
-        arm = Arm(
-            id=len(self.arms),
-            body=body,
-            state=ArmState.initial(self.context_length),
-        )
-        self.arms.append(arm)
+        with self._lock:
+            arm = Arm(
+                id=len(self.arms),
+                body=body,
+                state=ArmState.initial(self.context_length),
+            )
+            self.arms.append(arm)
 
     def observe(self, arm_id: int, reward: float, context: NDArray[np.float64]) -> None:
         """Update internal statistics after observing reward."""
-        arm = self.arms[arm_id]
+        with self._lock:
+            arm = self.arms[arm_id]
         arm.state.update(reward, context)
 
     @abstractmethod
@@ -106,7 +114,8 @@ class ThompsonSamplingRegistry(BanditRegistry[T], Generic[T]):
     def select(self, context: NDArray[np.float64]) -> Arm[T]:
         sampled_means: list[float] = []
         context_vec = context.reshape(-1, 1)
-        for arm in self.arms:
+        arms = self._arms_snapshot()
+        for arm in arms:
             with arm.state._lock:
                 y = np.linalg.solve(arm.state.L, arm.state.b)
                 mu_hat = np.linalg.solve(arm.state.L.T, y)
@@ -119,7 +128,7 @@ class ThompsonSamplingRegistry(BanditRegistry[T], Generic[T]):
                 sampled_means.append(sampled_mean)
 
         chosen_index = int(np.argmax(sampled_means))
-        return self.arms[chosen_index]
+        return arms[chosen_index]
 
 
 @dataclass
@@ -148,7 +157,8 @@ class UCBRegistry(BanditRegistry[T], Generic[T]):
         """
         ucb_values: list[float] = []
         context_vec = context.reshape(-1, 1)
-        for arm in self.arms:
+        arms = self._arms_snapshot()
+        for arm in arms:
             with arm.state._lock:
                 L_inv_b = np.linalg.solve(arm.state.L, arm.state.b)
                 mu_hat = np.linalg.solve(arm.state.L.T, L_inv_b)
@@ -161,4 +171,4 @@ class UCBRegistry(BanditRegistry[T], Generic[T]):
                 )
                 ucb_values.append(ucb_value)
         chosen_index = int(np.argmax(ucb_values))
-        return self.arms[chosen_index]
+        return arms[chosen_index]
