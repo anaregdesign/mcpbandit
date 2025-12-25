@@ -153,8 +153,8 @@ class UCBRegistry(BanditRegistry[T], Generic[T]):
                 y = np.linalg.solve(arm.state.L, arm.state.b)
                 mu_hat = np.linalg.solve(arm.state.L.T, y)
 
-                z = np.linalg.solve(arm.state.L.T, context_vec)
-                uncertainty = np.sqrt(float((context_vec.T @ z).item()))
+                y = np.linalg.solve(arm.state.L, context_vec)  # y = L^{-1} x
+                uncertainty = np.sqrt(float((y.T @ y).item()))
 
                 ucb_value = (
                     float((context_vec.T @ mu_hat).item()) + self.alpha * uncertainty
