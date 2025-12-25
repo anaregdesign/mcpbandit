@@ -2,59 +2,55 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pytest
 
-from mcpbandit.bandit import (
-    ArmState,
-    ThompsonSamplingRegistory,
-    UCBRegistory,
-)
+from mcpbandit.bandit import ArmState, ThompsonSamplingRegistry, UCBRegistry
 
 
-def _simulate(registory_factory: callable, *, rounds: int = 400) -> np.ndarray:
-    """Run a registory against two arms with binary 5-D contexts."""
+def _simulate(registry_factory: callable, *, rounds: int = 400) -> np.ndarray:
+    """Run a registry against two arms with binary 5-D contexts."""
     np.random.seed(0)
     rng = np.random.default_rng(1)
 
     context_dim = 5
-    registory = registory_factory(context_dim)
+    registry = registry_factory(context_dim)
     for _ in range(2):
-        registory.add(body=None)
+        registry.add(body=None)
 
     true_thetas = [
         np.array([0.1, 0.1, 0.05, 0.05, 0.05], dtype=float).reshape(-1, 1),
         np.array([0.6, 0.6, 0.2, 0.2, 0.2], dtype=float).reshape(-1, 1),
     ]
 
-    pulls = np.zeros(len(registory.arms), dtype=int)
+    pulls = np.zeros(len(registry.arms), dtype=int)
     for _ in range(rounds):
         context = rng.integers(0, 2, size=(context_dim,)).astype(float)
-        chosen_arm = registory.select(context)
+        chosen_arm = registry.select(context)
         reward = float(context @ true_thetas[chosen_arm.id].flatten())
-        registory.observe(chosen_arm.id, reward, context)
+        registry.observe(chosen_arm.id, reward, context)
         pulls[chosen_arm.id] += 1
     return pulls
 
 
 @pytest.mark.parametrize(
-    ("name", "registory_factory"),
+    ("name", "registry_factory"),
     [
         (
             "thompson",
-            lambda context_dim: ThompsonSamplingRegistory(
+            lambda context_dim: ThompsonSamplingRegistry(
                 context_length=context_dim, alpha=0.3
             ),
         ),
         (
             "ucb",
-            lambda context_dim: UCBRegistory(
+            lambda context_dim: UCBRegistry(
                 context_length=context_dim, alpha=0.5
             ),
         ),
     ],
 )
 def test_high_reward_arm_is_selected_more_often(
-    name: str, registory_factory: callable
+    name: str, registry_factory: callable
 ) -> None:
-    pulls = _simulate(registory_factory)
+    pulls = _simulate(registry_factory)
     assert pulls[1] > pulls[0], (
         f"[{name}] high-reward arm should be pulled more often: {pulls}"
     )

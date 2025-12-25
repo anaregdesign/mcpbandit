@@ -3,7 +3,7 @@ import asyncio
 from agents import Agent, ModelSettings, Runner, SQLiteSession
 from openai import AsyncOpenAI
 
-from mcpbandit.bandit import Arm, ThompsonSamplingRegistory
+from mcpbandit.bandit import Arm, ThompsonSamplingRegistry
 from mcpbandit.context import Context, QuestionBasedContextExtractor
 
 async def main() -> None:
@@ -45,7 +45,7 @@ async def main() -> None:
     )
 
     # Bandit registry that chooses an agent based on the extracted context
-    registry = ThompsonSamplingRegistory(
+    registry = ThompsonSamplingRegistry(
         context_length=context_extractor.context_length
     )
     registry.add(polite_agent)

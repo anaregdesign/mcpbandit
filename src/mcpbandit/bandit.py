@@ -63,7 +63,7 @@ class Arm(Generic[T]):
 
 
 @dataclass
-class BanditRegistory(ABC, Generic[T]):
+class BanditRegistry(ABC, Generic[T]):
     context_length: int
     arms: list[Arm[T]] = field(default_factory=list)
 
@@ -88,7 +88,7 @@ class BanditRegistory(ABC, Generic[T]):
 
 
 @dataclass
-class ThompsonSamplingRegistory(BanditRegistory[T], Generic[T]):
+class ThompsonSamplingRegistry(BanditRegistry[T], Generic[T]):
     """Linear Thompson Sampling policy using a Gaussian posterior.
 
     Args:
@@ -123,7 +123,7 @@ class ThompsonSamplingRegistory(BanditRegistory[T], Generic[T]):
 
 
 @dataclass
-class UCBRegistory(BanditRegistory[T], Generic[T]):
+class UCBRegistry(BanditRegistry[T], Generic[T]):
     """Linear UCB policy with ellipsoidal confidence bounds.
 
     Args:

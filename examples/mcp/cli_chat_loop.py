@@ -3,7 +3,7 @@ import asyncio
 import fastmcp
 from openai import AsyncOpenAI
 
-from mcpbandit.bandit import Arm, BanditRegistory, ThompsonSamplingRegistory
+from mcpbandit.bandit import Arm, BanditRegistry, ThompsonSamplingRegistry
 from mcpbandit.context import Context, QuestionBasedContextExtractor
 
 
@@ -19,7 +19,7 @@ async def main() -> None:
         ],
         api_kwargs={"reasoning": {"effort": "none"}},
     )
-    registry: BanditRegistory[fastmcp.Client] = ThompsonSamplingRegistory(
+    registry: BanditRegistry[fastmcp.Client] = ThompsonSamplingRegistry(
         context_length=extractor.context_length,
         alpha=0.5,
     )
